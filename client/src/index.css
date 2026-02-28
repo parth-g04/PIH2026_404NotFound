@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: #050810;
+    color: #e2e8f0;
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #080d1a; }
+  ::-webkit-scrollbar-thumb { background: rgba(99,179,237,0.3); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(99,179,237,0.5); }
+
+  input, textarea, select { outline: none; background: transparent; }
+}
+
+
+@layer components {
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .hero-glow {
+  position: fixed;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 60vh;
+  background: radial-gradient(circle at center, rgba(59,130,246,0.12) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(80px);
+}
+  .card {
+  @apply bg-bg-surface/60 backdrop-blur-md border border-border rounded-2xl p-7;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+ }
+  .card:hover {
+  @apply border-border-bright;
+  box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.5);
+ }
+
+
+  .card-accent::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+  }
+
+  .card-accent-green::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #10b981, transparent);
+  }
+
+  .label-mono {
+    @apply font-mono text-xs tracking-widest text-text-faint uppercase;
+  }
+
+  .section-tag {
+    @apply font-mono text-xs tracking-widest text-cyan-brand uppercase;
+    @apply bg-cyan-brand/10 border border-cyan-brand/20 px-3 py-1 rounded;
+  }
+
+  .input-field {
+    @apply w-full bg-bg-secondary border border-border rounded-lg px-4 py-3;
+    @apply text-text text-sm font-sans transition-all duration-200;
+    @apply focus:border-accent focus:ring-2 focus:ring-accent/10;
+    @apply placeholder:text-text-faint;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-accent to-blue-700 text-white;
+    @apply font-syne font-bold rounded-xl transition-all duration-300;
+    @apply hover:-translate-y-0.5 hover:shadow-accent-lg;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+  }
+
+  .btn-secondary {
+    @apply bg-transparent text-text-muted border border-border-bright rounded-xl;
+    @apply transition-all duration-200 hover:border-accent hover:text-accent-light;
+  }
+
+  .btn-ghost {
+    @apply bg-accent/10 border border-accent/20 text-accent-light;
+    @apply rounded-lg font-mono text-xs tracking-wide;
+    @apply transition-all duration-200 hover:bg-accent/20 hover:border-accent-light;
+  }
+
+  .patent-item {
+    @apply flex items-center gap-4;
+    @apply bg-bg-secondary border border-border rounded-xl p-4;
+    @apply cursor-pointer transition-all duration-200;
+    @apply hover:border-border-bright hover:bg-bg-surface;
+  }
+
+  .heatmap-cell {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    background: rgba(99,179,237,0.12);
+    transition: all 0.8s ease;
+    cursor: pointer;
+  }
+  .heatmap-cell:hover { transform: scale(1.15); }
+
+  .step-item {
+    @apply flex items-center gap-3 font-mono text-xs text-text-faint transition-colors duration-300;
+  }
+  .step-item.step-done   { @apply text-success; }
+  .step-item.step-active { @apply text-cyan-brand; }
+}
+
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes loadingBar {
+  0%  { width: 0%; }
+  50% { width: 70%; }
+  90% { width: 92%; }
+}
+
+.loading-bar-animate {
+  animation: loadingBar 4s ease forwards;
+}
+
+/* Score ring fill animation */
+.score-ring-fill {
+  stroke-dasharray: 377;
+  stroke-dashoffset: 377;
+  transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+  stroke-linecap: round;
+}
