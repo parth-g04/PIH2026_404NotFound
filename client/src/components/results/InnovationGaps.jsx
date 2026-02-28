@@ -3,7 +3,6 @@ import { Lightbulb } from 'lucide-react'
 
 import {
   Rocket,
-  Lightbulb,
   Wrench,
   BarChart,
   PartyPopper,
