@@ -1,0 +1,16 @@
+{
+  "name": "patentguard-ai-engine",
+  "version": "1.0.0",
+  "description": "PatentGuard AI — AI Engine Module",
+  "main": "index.js",
+  "scripts": {
+    "test:embeddings": "node test_embeddings.js",
+    "test:scorer":     "node test_scorer.js",
+    "test:claims":     "node test_claims.js",
+    "test:gaps":       "node test_gaps.js"
+  },
+  "dependencies": {
+    "dotenv":  "^16.3.1",
+    "openai":  "^4.20.1"
+  }
+}

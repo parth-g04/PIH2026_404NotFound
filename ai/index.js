@@ -1,7 +1,7 @@
 const { generateEmbedding, cosineSimilarity } = require('./embeddings')
-const { computeScore }         = require('./scorer')
-const { analyzeClaims }        = require('./claimAnalyzer')
-const { detectInnovationGaps } = require('./gapDetector')
+const { computeScore }          = require('./scorer')
+const { analyzeClaims }         = require('./claimAnalyzer')
+const { detectInnovationGaps }  = require('./gapDetector')
 
 module.exports = {
   generateEmbedding,
