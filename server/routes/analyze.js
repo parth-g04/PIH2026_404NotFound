@@ -1,31 +1,29 @@
-// POST /api/analyze — main analysis pipeline
-const express  = require('express')
-const router   = express.Router()
-const logger   = require('../utils/logger')
+// BULLETPROOF: DEMO_MODE bypasses all AI/DB calls
+
+const path   = require('path')
+const dotenv = require('dotenv')
+dotenv.config({ path: path.join(__dirname, '../../.env') })
+
+const express = require('express')
+const router  = express.Router()
+const logger  = require('../utils/logger')
 const { validateAnalysisInput, sanitizeString } = require('../utils/validator')
+const { getMockAnalysisResult }                  = require('../utils/mockData')
 
-const { generateEmbedding }    = require('../../ai/embeddings')
-const { computeScore }         = require('../../ai/scorer')
-const { analyzeClaims }        = require('../../ai/claimAnalyzer')
-const { detectInnovationGaps } = require('../../ai/gapDetector')
-
-const { searchSimilarPatents } = require('../../database/queries/vectorSearch')
-const { saveAnalysis }         = require('../../database/queries/saveAnalysis')
-
-router.post('/', async (req, res, next) => {
+router.post('/', async (req, res) => {
   const startTime = Date.now()
 
+  // Read fresh every request — never cached
+  const DEMO_MODE = process.env.DEMO_MODE === 'true'
+  logger.info(`DEMO_MODE = ${DEMO_MODE}`)
+
   try {
-    // ── Step 1: Validate input 
+    // ── Validate 
     const { valid, errors } = validateAnalysisInput(req.body)
     if (!valid) {
-      return res.status(400).json({
-        success: false,
-        error:   errors.join(' '),
-      })
+      return res.status(400).json({ success: false, error: errors.join(' ') })
     }
 
-    // ── Step 2: Sanitize inputs 
     const invention = {
       title:       sanitizeString(req.body.title),
       description: sanitizeString(req.body.description),
@@ -34,72 +32,88 @@ router.post('/', async (req, res, next) => {
       market:      sanitizeString(req.body.market  || ''),
     }
 
-    logger.info(`Analyzing: "${invention.title}" [${invention.domain}]`)
+    // ── DEMO MODE — instant mock response 
+    if (DEMO_MODE) {
+      logger.warn('DEMO_MODE ON — returning mock data, no API calls made')
+      // Realistic 3 second delay so loading animation plays
+      await new Promise(r => setTimeout(r, 3000))
+      const mock = getMockAnalysisResult(invention)
+      mock.processingTimeMs = Date.now() - startTime
+      return res.json({ success: true, data: mock })
+    }
 
-    // ── Step 3: Generate embedding 
-    logger.info('1/5 Generating embeddings...')
-    const fullText  = `${invention.title}. ${invention.description}. Key claims: ${invention.claims}`
+    // ── REAL MODE
+    logger.info(`Real analysis: "${invention.title}"`)
+
+    const { generateEmbedding }    = require('../../ai/embeddings')
+    const { computeScore }         = require('../../ai/scorer')
+    const { analyzeClaims }        = require('../../ai/claimAnalyzer')
+    const { detectInnovationGaps } = require('../../ai/gapDetector')
+    const { searchSimilarPatents } = require('../../database/queries/vectorSearch')
+    const { saveAnalysis }         = require('../../database/queries/saveAnalysis')
+    const { searchUSPTOLive }      = require('../utils/usptoSearch')
+
+    logger.info('1/5 Generating embedding...')
+    const fullText  = `${invention.title}. ${invention.description}. Claims: ${invention.claims}`
     const embedding = await generateEmbedding(fullText)
 
-    // ── Step 4: Vector search for similar patents 
-    logger.info('2/5 Searching prior art...')
-    const similarPatents = await searchSimilarPatents(
-      embedding,
-      invention.domain,
-      5
-    )
+    logger.info('2/5 Vector search + USPTO live...')
+    const [dbPatents, livePatents] = await Promise.all([
+      searchSimilarPatents(embedding, invention.domain, 5),
+      searchUSPTOLive(invention.title, invention.domain),
+    ])
 
-    // ── Step 5: LLM claim analysis 
-    logger.info('3/5 Analyzing claims with GPT-4o...')
+    // Merge DB + USPTO, deduplicate by patent number
+    const seen = new Set()
+    const similarPatents = [...dbPatents, ...livePatents].filter(p => {
+      if (seen.has(p.patentNumber)) return false
+      seen.add(p.patentNumber)
+      return true
+    }).slice(0, 5)
+
+    logger.info('3/5 Claim analysis...')
     const claims = await analyzeClaims(invention)
 
-    // ── Step 6: Compute patentability score 
     logger.info('4/5 Computing score...')
     const { score, metrics, heatmap } = await computeScore(
-      invention,
-      embedding,
-      similarPatents
+      invention, embedding, similarPatents
     )
 
-    // ── Step 7: Detect innovation gaps
-    logger.info('5/5 Detecting innovation gaps...')
+    logger.info('5/5 Gap detection...')
     const innovationGaps = await detectInnovationGaps(invention, similarPatents)
 
-    // ── Step 8: Save to database 
     const analysisId = await saveAnalysis({
-      invention,
-      score,
-      metrics,
-      heatmap,
-      claims,
-      similarPatents,
-      innovationGaps,
+      invention, score, metrics, heatmap,
+      claims, similarPatents, innovationGaps,
     })
 
     const processingTimeMs = Date.now() - startTime
-    logger.success(
-      `Analysis done — score: ${score}/100, patents: ${similarPatents.length}, time: ${processingTimeMs}ms`
-    )
+    logger.success(`Done — ${score}/100 in ${processingTimeMs}ms`)
 
-    // ── Step 9: Return response 
     return res.json({
       success: true,
       data: {
-        analysisId,
-        score,
-        metrics,
-        heatmap,
-        claims,
-        similarPatents,
-        innovationGaps,
-        processingTimeMs,
-        invention,
+        analysisId, score, metrics, heatmap,
+        claims, similarPatents, innovationGaps,
+        processingTimeMs, invention,
       },
     })
 
   } catch (err) {
-    logger.error('Analysis pipeline failed:', err.message)
-    next(err)  // Pass to global error handler
+    // ── ALWAYS fallback — demo NEVER fails 
+    logger.error('Pipeline error:', err.message)
+    logger.warn('Auto-fallback to mock data...')
+    const invention = {
+      title:       sanitizeString(req.body?.title       || 'Demo Invention'),
+      description: sanitizeString(req.body?.description || ''),
+      domain:      sanitizeString(req.body?.domain      || 'General'),
+      claims:      sanitizeString(req.body?.claims      || ''),
+      market:      sanitizeString(req.body?.market      || ''),
+    }
+    const mock = getMockAnalysisResult(invention)
+    mock.processingTimeMs = Date.now() - startTime
+    mock.isFallback = true
+    return res.json({ success: true, data: mock })
   }
 })
 

@@ -17,7 +17,7 @@ const DOMAINS = [
 
 const LOADING_STEPS = [
   'Generating semantic embeddings from your description...',
-  'Searching 120M+ patents via vector similarity...',
+  'Searching patent database + live USPTO validation...',
   'Analyzing claim structure with GPT-4o...',
   'Computing patentability risk score...',
   'Detecting innovation gaps in prior art...',

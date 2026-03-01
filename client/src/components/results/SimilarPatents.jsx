@@ -72,6 +72,14 @@ export default function SimilarPatents({ patents = [] }) {
                                  px-2 py-1 rounded whitespace-nowrap">
                   {patent.domain}
                 </span>
+                {/* USPTO LIVE badge */}
+                {patent.source === 'USPTO_LIVE' && (
+                  <span className="font-mono text-[9px] text-success
+                     bg-success/10 border border-success/20
+                     px-2 py-0.5 rounded tracking-wide">
+                    ● LIVE USPTO
+                  </span>
+                )}
                 <ExternalLink
                   size={13}
                   className="text-text-faint opacity-0 group-hover:opacity-100
