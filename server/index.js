@@ -15,17 +15,16 @@ const logger        = require('./utils/logger')
 const app  = express()
 const PORT = process.env.PORT || 5000
 
-// ── CORS 
 app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:3000',
-    'http://127.0.0.1:5173',
+    /\.vercel\.app$/,      // ← allows ALL vercel URLs
+    /\.railway\.app$/,
   ],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }))
-
 // ── Body Parsing 
 app.use(express.json({ limit: '2mb' }))
 app.use(express.urlencoded({ extended: true }))
