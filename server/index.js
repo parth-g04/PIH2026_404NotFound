@@ -13,17 +13,19 @@ const errorHandler  = require('./middleware/errorHandler')
 const logger        = require('./utils/logger')
 
 const app  = express()
-const PORT = process.env.PORT || 5000
+const PORT = parseInt(process.env.PORT) || 5000
 
 app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:3000',
-    /\.vercel\.app$/,      // ← allows ALL vercel URLs
+    'https://pih2026404notfound-production.up.railway.app', 
+    /\.vercel\.app$/,
     /\.railway\.app$/,
   ],
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods:      ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials:  false,
 }))
 // ── Body Parsing 
 app.use(express.json({ limit: '2mb' }))
@@ -63,11 +65,13 @@ app.get('/api/health', (req, res) => {
   })
 })
 
-// ── 404 Handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    error:   `Route ${req.method} ${req.originalUrl} not found`,
+// Root route — Railway health check hits this
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    service: 'PatentGuard AI API',
+    version: '1.0.0',
+    health:  '/api/health',
   })
 })
 
