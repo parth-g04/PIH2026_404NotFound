@@ -103,25 +103,31 @@
 
   .btn-ghost {
     @apply bg-accent/10 border border-accent/20 text-accent-light;
-    @apply rounded-lg font-mono text-xs tracking-wide;
-    @apply transition-all duration-200 hover:bg-accent/20 hover:border-accent-light;
-  }
-
-  .patent-item {
-    @apply flex items-center gap-4;
-    @apply bg-bg-secondary border border-border rounded-xl p-4;
-    @apply cursor-pointer transition-all duration-200;
-    @apply hover:border-border-bright hover:bg-bg-surface;
-  }
-
-  .heatmap-cell {
-    aspect-ratio: 1;
-    border-radius: 3px;
-    background: rgba(99,179,237,0.12);
-    transition: all 0.8s ease;
-    cursor: pointer;
-  }
-  .heatmap-cell:hover { transform: scale(1.15); }
+      @apply rounded-lg font-mono text-xs tracking-wide;
+      @apply transition-all duration-200 hover:bg-accent/20 hover:border-accent-light;
+    }
+    
+    .patent-item {
+      @apply flex items-center gap-4;
+      @apply bg-bg-secondary border border-border rounded-xl p-4;
+      @apply cursor-pointer transition-all duration-200;
+      @apply hover:border-border-bright hover:bg-bg-surface;
+    }
+    
+    .heatmap-cell {
+      aspect-ratio: 1;
+      border-radius: 5px;
+      background: rgba(99, 179, 237, 0.12);
+      transition: all 0.8s ease;
+      cursor: pointer;
+      min-height: 32px;
+    }
+    
+    .heatmap-cell:hover {
+      transform: scale(1.15);
+      z-index: 10;
+      position: relative;
+    }
 
   .step-item {
     @apply flex items-center gap-3 font-mono text-xs text-text-faint transition-colors duration-300;
